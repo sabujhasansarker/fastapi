@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float
+from sqlalchemy import Column, Integer, String, Float, TIMESTAMP, text
 from . database import Base
 
 class Course(Base):
@@ -8,3 +8,10 @@ class Course(Base):
     instructor = Column(String, nullable=False)
     duration = Column(Float, nullable= False)
     website = Column(String)
+
+class User(Base) :
+    __tablename__='users'
+    id = Column(Integer, primary_key = True, index=True)
+    email = Column(String, nullable=False,unique=True)
+    password = Column(String,nullable=True)
+    created_at = Column(TIMESTAMP(timezone=True),nullable=False,server_default=text('now()'))

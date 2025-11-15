@@ -1,7 +1,8 @@
 from fastapi import FastAPI, Depends, HTTPException,status,Response
 from sqlalchemy.orm import Session
 from . import models
-from .schemas import CourseResponse, CourseCreate
+from . import utils
+from .schemas import CourseResponse, CourseCreate, UserCreate, UserResponse
 from .database import engine, get_db
 
 # Create tables
@@ -68,3 +69,16 @@ def get_course(id:int,db: Session = Depends(get_db)):
     course_query.delete(synchronize_session=False)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+# create user
+@app.post("/user",status_code=status.HTTP_201_CREATED, response_model=UserResponse)
+def create_user(user: UserCreate, db: Session = Depends(get_db)) :
+    if db.query(models.User).filter(models.User.email == user.email).first() :
+        raise HTTPException(400, "Email already exits")
+    hashed_password = utils.hash_password(user.password)
+    user.password = hashed_password
+    new_user = models.User(**user.model_dump())
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user

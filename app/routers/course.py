@@ -4,10 +4,17 @@ from .. import models
 from ..schemas import CourseResponse, CourseCreate
 from ..database import  get_db
 
-router = APIRouter()
-
+router = APIRouter(
+    prefix="/course",
+    tags=["Courses"]
+)
+# for courses
+courses_router = APIRouter(
+    prefix="/courses",
+    tags=["Courses"]
+)
 # Add course
-@router.post('/course', response_model=CourseResponse)
+@router.post('/', response_model=CourseResponse)
 def create_course(course: CourseCreate, db: Session = Depends(get_db)):
     new_course = models.Course(**course.model_dump())
     db.add(new_course)
@@ -16,13 +23,13 @@ def create_course(course: CourseCreate, db: Session = Depends(get_db)):
     return new_course
 
 # Get all courses
-@router.get("/courses", response_model=list[CourseResponse])
+@courses_router.get("/", response_model=list[CourseResponse])
 def get_courses(db: Session = Depends(get_db)):
     courses = db.query(models.Course).all()
     return courses
 
 # get with id
-@router.get("/course/{id}",response_model=CourseResponse)
+@router.get("/{id}",response_model=CourseResponse)
 def get_course(id:int,db: Session = Depends(get_db)):
     course= db.query(models.Course).filter(models.Course.id == id).first()
     if not course:
@@ -33,7 +40,7 @@ def get_course(id:int,db: Session = Depends(get_db)):
     return course
 
 #edit data
-@router.put("/course/{id}",response_model=CourseResponse)
+@router.put("/{id}",response_model=CourseResponse)
 def update_course(id:int,update_course: CourseCreate,db: Session = Depends(get_db)):
      course_query= db.query(models.Course).filter(models.Course.id == id)
      course = course_query.first()
@@ -49,7 +56,7 @@ def update_course(id:int,update_course: CourseCreate,db: Session = Depends(get_d
      return course
 
 # delete data
-@router.delete("/course/{id}",status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{id}",status_code=status.HTTP_204_NO_CONTENT)
 def get_course(id:int,db: Session = Depends(get_db)):
     course_query= db.query(models.Course).filter(models.Course.id == id)
     course= course_query.first()

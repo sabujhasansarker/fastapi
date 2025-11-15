@@ -6,7 +6,10 @@ from ..database import  get_db
 from .. import utils
 
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/users",
+    tags=["Users"]
+)
 
 # create user
 @router.post("/user",status_code=status.HTTP_201_CREATED, response_model=UserResponse)

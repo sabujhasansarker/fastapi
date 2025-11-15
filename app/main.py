@@ -1,40 +1,12 @@
 from fastapi import FastAPI, Depends, HTTPException,status,Response
-from pydantic import BaseModel, field_validator, ConfigDict
-from typing import Optional
 from sqlalchemy.orm import Session
 from . import models
+from .schemas import CourseResponse, CourseCreate
 from .database import engine, get_db
 
 # Create tables
 models.Base.metadata.create_all(bind=engine)
 app = FastAPI()
-
-# Request Schema
-class CourseCreate(BaseModel):
-    name: str
-    instructor: str
-    duration: float
-    website: Optional[str] = None
-
-    @field_validator('website', mode='before')
-    @classmethod
-    def validate_website(cls, v):
-        if v == '' or v is None:
-            return None
-        if v and not v.startswith(('http://', 'https://')):
-            return f'https://{v}'
-        return v
-
-
-# Response Schema
-class CourseResponse(BaseModel):
-    id: int
-    name: str
-    instructor: str
-    duration: float
-    website: Optional[str] = None
-
-    model_config = ConfigDict(from_attributes=True)
 
 # Root endpoint
 @app.get("/")
@@ -42,14 +14,9 @@ def root(db: Session = Depends(get_db)):
     return {"status": "SQLAlchemy ORM working"}
 
 # Add course
-@app.post('/courses', response_model=CourseResponse)
+@app.post('/course', response_model=CourseResponse)
 def create_course(course: CourseCreate, db: Session = Depends(get_db)):
-    new_course = models.Course(
-        name=course.name,
-        instructor=course.instructor,
-        duration=course.duration,
-        website=course.website,
-    )
+    new_course = models.Course(**course.model_dump())
     db.add(new_course)
     db.commit()
     db.refresh(new_course)
@@ -62,7 +29,7 @@ def get_courses(db: Session = Depends(get_db)):
     return courses
 
 # get with id
-@app.get("/course/{id}")
+@app.get("/course/{id}",response_model=CourseResponse)
 def get_course(id:int,db: Session = Depends(get_db)):
     course= db.query(models.Course).filter(models.Course.id == id).first()
     if not course:
@@ -70,10 +37,10 @@ def get_course(id:int,db: Session = Depends(get_db)):
             status_code= status.HTTP_404_NOT_FOUND,
             detail=f"course not found id:{id}"
         )
-    return {"course":course}
+    return course
 
 #edit data
-@app.put("/course/{id}")
+@app.put("/course/{id}",response_model=CourseResponse)
 def update_course(id:int,update_course: CourseCreate,db: Session = Depends(get_db)):
      course_query= db.query(models.Course).filter(models.Course.id == id)
      course = course_query.first()
@@ -86,7 +53,7 @@ def update_course(id:int,update_course: CourseCreate,db: Session = Depends(get_d
      course_query.update(update_data,synchronize_session=False)
      db.commit()
      db.refresh(course)
-     return{"updated course":course}
+     return course
 
 # delete data
 @app.delete("/course/{id}",status_code=status.HTTP_204_NO_CONTENT)

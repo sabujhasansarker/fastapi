@@ -7,4 +7,4 @@ class Course(Base):
     name = Column(String, nullable=False)
     instructor = Column(String, nullable=False)
     duration = Column(Float, nullable= False)
-    website = Column(String, nullable = False)
+    website = Column(String)

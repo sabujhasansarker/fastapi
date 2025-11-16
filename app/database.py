@@ -1,10 +1,21 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from dotenv import load_dotenv
+import os
 
-SQLALCHEMY_DATABASE_URL = 'postgresql://aiquest_mppx_user:gCSo3ckjyZEzokLooTdeClRprRRMjB3m@dpg-d4cgk0mr433s73dhlp1g-a/aiquest_mppx'
+# Load environment variables from .env
+load_dotenv()
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+USER = os.getenv("user")
+PASSWORD = os.getenv("password")
+HOST = os.getenv("host")
+PORT = os.getenv("port")
+DBNAME = os.getenv("dbname")
+
+DATABASE_URL = f"postgresql+psycopg2://{USER}:{PASSWORD}@{HOST}:{PORT}/{DBNAME}?sslmode=require"
+
+engine = create_engine(DATABASE_URL)
 SesionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
